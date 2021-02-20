@@ -77,3 +77,31 @@ zstd        33%       15M          44M          44M
 ```
 
 In the example above, only 44 MB worth of data have been compressed with ZSTD (to a third of its size), while 1.1 GB have been considered uncompressable (probably because they were either binaries or already compressed).
+
+# Disk quotas
+
+Btrfs can impose disk quotas on subvolumes, effectively limiting the space they can grow to arbitrarily. You can enable quotas for a subvolume (in my tests, this command enabled quotas for all subvolumes within the same partition), with:
+
+```bash
+$ btrfs quota enable <mounted-subvolume-path>
+```
+
+You should run this command the first time:
+
+```bash
+$ btrfs quota rescan <mounted-subvolume-path>
+```
+
+After that, you can check the status of the quotas with:
+
+```bash
+$ btrfs qgroup show -reF /
+```
+
+The above will show a list of all subvolumes in `/`, and their size (`rfer` column), and quota (`max_rfer` column).
+
+To set a quota on a subvolume, for example `/home` to 20 GB:
+
+```bash
+$ btrfs qgroup limit 20G /home
+```
