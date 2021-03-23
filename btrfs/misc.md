@@ -105,3 +105,26 @@ To set a quota on a subvolume, for example `/home` to 20 GB:
 ```bash
 $ btrfs qgroup limit 20G /home
 ```
+
+# Free space
+
+There are a number of commands to check the disk usage of a Btrfs filesystem[1]. Assuming we want to check a filesystem mounted at `/btrfs`:
+
+```bash
+$ btrfs filesystem show
+$ btrfs filesystem df /btrfs
+$ btrfs filesystem usage /btrfs
+```
+
+The main thing to consider in order to understand disk space usage by a Btrfs system is that Btrfs allocates space in chunks before putting data into them. Depending on how full the chunks are, the total allocated space can be significantly larger than the data inside it. For example, in a 500 GB partition, we could have 100 GB of data on it, and Btrfs might have allocated 120 GB. This means that the disk theoretically has 400 GB of free space, but actually only 380 GB of data can be added to it. Tools such as `df` will tell us that the full 400 GB are free, while 20 of those are allocated (unusable) space.
+
+One way to close the gap between free and actually usable space is to run the balance Btrfs tool[1]. The syntax is:
+
+```bash
+$ btrfs balance start -dusage=x /
+$ btrfs balance start -musage=x /
+```
+
+where `x` is a number from 0 to 100. The first command acts upon data, and the second one upon metadata. Each one analyzes the disk chunks where Btrfs stores data, and relocates it if the occupation of the chunk is below `x`. This way data is stored more efficiently in chunks, and allocated space is closer to actual data size.
+
+[1] https://ohthehugemanatee.org/blog/2019/02/11/btrfs-out-of-space-emergency-response/
